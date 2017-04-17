@@ -32,8 +32,6 @@ class Counter < Types::ABCIApplication::Service
     byte_array = trans.tx.bytes
     byte_array.each {|byte| array_count += byte}
 
-    p @@trans
-
     if @@serial
       if array_count == @@count
         @@count += 1
@@ -45,6 +43,23 @@ class Counter < Types::ABCIApplication::Service
     else
       @@trans << trans
       Types::ResponseDeliverTx.new(log: "transaction delivered")
+    end
+
+  end
+
+  def check_tx(trans, _call)
+    array_count = 0
+    byte_array = trans.tx.bytes
+    byte_array.each {|byte| array_count += byte}
+
+    if @@serial
+      if array_count == @@count
+        Types::ResponseCheckTx.new(log: "transaction valid")
+      else
+        Types::ResponseCheckTx.new(log: "invalid value")
+      end
+    else
+      Types::ResponseCheckTx.new(log: "transaction valid")
     end
 
   end
