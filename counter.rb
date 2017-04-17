@@ -5,6 +5,7 @@ class Counter < Types::ABCIApplication::Service
 
   @serial = false
   @count = 0
+  @trans = []
 
   def echo(string, _call)
     Types::ResponseEcho.new(message: "#{string.message}")
@@ -27,8 +28,31 @@ class Counter < Types::ABCIApplication::Service
   end
 
   def deliver_tx(trans, _call)
-    # trans_data = trans.tx
-    Types::ResponseDeliverTx.new(data: "3")
+    trans = trans.tx
+    if trans.slice(0..1) == '\x'
+      trans[0..1] = ""
+      if trans.length >= 2 && trans.length % 2 == 0
+        trans_array = trans.scan(/.{2}/)
+        trans_array.each do |byte|
+          dec = byte.to_i(16)
+          array_count += dec
+        end
+        if @serial && array_count == @count
+          @count += 1
+          @trans << trans
+          Types::ResponseDeliverTx.new(log: "transaction delivered")
+        elsif @serial == false
+          @trans << trans
+          Types::ResponseDeliverTx.new(log: "transaction delivered")
+        else
+          Types::ResponseDeliverTx.new(log: "invalid value")
+        end
+      else
+        Types::ResponseDeliverTx.new(log: "each byte must have two digits")
+      end
+    else
+      Types::ResponseDeliverTx.new(log: "trans must start '0x'")
+    end
   end
 
 end
