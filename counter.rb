@@ -32,19 +32,18 @@ class Counter < Types::ABCIApplication::Service
     byte_array = trans.tx.bytes
     byte_array.each {|byte| array_count += byte}
 
+    p @@trans
 
     if @@serial
       if array_count == @@count
         @@count += 1
-        p "ser on"
-        byte_array.each {|byte| @@trans << byte}
+        @@trans << trans
         Types::ResponseDeliverTx.new(log: "transaction delivered")
       else
         Types::ResponseDeliverTx.new(log: "invalid value")
       end
     else
-      p "ser off"
-      byte_array.each {|byte| @@trans << byte}
+      @@trans << trans
       Types::ResponseDeliverTx.new(log: "transaction delivered")
     end
 
