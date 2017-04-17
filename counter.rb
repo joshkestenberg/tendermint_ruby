@@ -36,13 +36,13 @@ class Counter < Types::ABCIApplication::Service
       if array_count == @@count
         @@count += 1
         @@trans << trans
-        Types::ResponseDeliverTx.new(log: "transaction delivered")
+        Types::ResponseDeliverTx.new(code: :OK)
       else
-        Types::ResponseDeliverTx.new(log: "invalid value")
+        Types::ResponseDeliverTx.new(code: :BadNonce)
       end
     else
       @@trans << trans
-      Types::ResponseDeliverTx.new(log: "transaction delivered")
+      Types::ResponseDeliverTx.new(code: :OK)
     end
 
   end
@@ -54,12 +54,12 @@ class Counter < Types::ABCIApplication::Service
 
     if @@serial
       if array_count == @@count
-        Types::ResponseCheckTx.new(log: "transaction valid")
+        Types::ResponseCheckTx.new(code: :OK)
       else
-        Types::ResponseCheckTx.new(log: "invalid value")
+        Types::ResponseCheckTx.new(code: :BadNonce)
       end
     else
-      Types::ResponseCheckTx.new(log: "transaction valid")
+      Types::ResponseCheckTx.new(code: :OK)
     end
 
   end
