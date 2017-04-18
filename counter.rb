@@ -5,10 +5,15 @@ class Counter < Types::ABCIApplication::Service
 
   @@serial = false
   @@count = 0
-  @@trans = []
+  @@commit_count = 0
+  @@trans_count = 0
 
   def echo(string, _call)
     Types::ResponseEcho.new(message: "#{string.message}")
+  end
+
+  def info(app, _call)
+    Types::ResponseInfo.new(data: "committed blocks: #{@@commit_count}, unhashed transactions: #{@@trans_count}")
   end
 
   def set_option(flag, _call)
@@ -35,13 +40,13 @@ class Counter < Types::ABCIApplication::Service
     if @@serial
       if array_count == @@count
         @@count += 1
-        @@trans << trans
+        @@trans_count += 1
         Types::ResponseDeliverTx.new(code: :OK)
       else
         Types::ResponseDeliverTx.new(code: :BadNonce)
       end
     else
-      @@trans << trans
+      @@trans_count += 1
       Types::ResponseDeliverTx.new(code: :OK)
     end
 
@@ -62,6 +67,33 @@ class Counter < Types::ABCIApplication::Service
       Types::ResponseCheckTx.new(code: :OK)
     end
 
+  end
+
+  def commit(commit, _call)
+    if @@trans_count > 0
+      @@commit_count += 1
+
+      last_byte = @@trans_count % 256
+
+      byte_array = []
+      x = 7
+
+      7.times do |time|
+        base = 256 ** x
+        digit = @@trans_count / base
+        @@trans_count -= digit * base
+        byte_array << digit
+        x -= 1
+      end
+
+      byte_array << last_byte
+      byte_string = byte_array.pack("C*")
+
+      @@trans_count = 0
+      Types::ResponseCheckTx.new(data: byte_string)
+    else
+      Types::ResponseCheckTx.new(log: "no transactions to commit")
+    end
   end
 
 end
