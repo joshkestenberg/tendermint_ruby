@@ -89,7 +89,6 @@ class Counter < Types::ABCIApplication::Service
       byte_array << last_byte
       byte_string = byte_array.pack("C*")
 
-      @@trans_count = 0
       Types::ResponseCheckTx.new(data: byte_string)
     else
       Types::ResponseCheckTx.new(log: "no transactions to commit")
