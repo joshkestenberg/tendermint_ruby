@@ -97,12 +97,11 @@ class Counter < Types::ABCIApplication::Service
   end
 
   def begin_block(beg, _call)
-    @@current_hash = beg.hash
-    @@current_header = beg.header
+    beg
   end
 
   def end_block(e, _call)
-
+    e
   end
 
 end
